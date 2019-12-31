@@ -221,7 +221,7 @@ class GenericTableModel(QAbstractTableModel):
             self._last_index=max(self.db_index)
 
     def padDoubleR(self,flt,_len):
-        flt = round(flt,-2)           
+        flt = round(flt,2)           
         flt_lst = str(flt).split('.')
         pad_num = _len - len(flt_lst[1])
         for i in range(pad_num):
@@ -430,7 +430,6 @@ class GenericTableModel(QAbstractTableModel):
                             self.model_data[index.row()][index.column()]
                             )
                     except ValueError:
-                        print(index.row(),index.column())
                         return 'DATA ERROR'        
                     return alt_vals[raw]
                 else:
@@ -1216,8 +1215,7 @@ class CallModel(GenericTableModel):
                 if val == 0:
                     return '$ 0.00'
                 else:
-                    print(val)
-                    print(self.padDoubleR,2)    
+                    self.padDoubleR(val,2)    
                     return '$' + self.padDoubleR(val,2)
             elif index.column() in [5,7]:
                 val = self.model_data[index.row()][index.column()]
@@ -1284,6 +1282,10 @@ class CallModel(GenericTableModel):
 
         return True       
 
+    def setPDate(self,row,date):
+        self.setData(self.index(row,self.pdate_col),date,Qt.EditRole)
+        self.pdateChanged(self.db_index[row],3,None,self.pdate_col)
+
     @pyqtSlot(int,int,float,float)
     def updatePay(self,rownum,typenum,s_off,a_off):
         if typenum == 3:
@@ -1300,7 +1302,6 @@ class CallModel(GenericTableModel):
             if not self.model_data[row][self.pdate_col]:
                 return False
             index = self.index(self.db_index.index(rownum),self.pdate_col+1)
-            print(self.model_data[row][self.pdate_col],self.model_data[row][self.date_col])
             date = max(self.model_data[row][self.pdate_col] - self.model_data[row][self.date_col],0)
             self.setData(index,date,Qt.EditRole)
 
@@ -1339,23 +1340,34 @@ class CallTable(GenericTableView):
 
     def contextMenuEvent(self,event):
         menu = self.contextMenuSetup(event)
+        menu.addAction('Set Pay Date')
         menu.addAction('Clear Date')
         action, options = self.contextMenuExec(event,menu)
-        
-        #clear_pdate_action
+
         if action == options[3]:
-            if not self.getSelRows():
-                pass
-            else:
-                self.clearPDates()        
+            self.setPDates(event)
+        elif action == options[4]:
+            self.clearPDates()           
 
+    @pyqtSlot()
     def clearPDates(self):
-        rows = set(self.getSelRows())
-        for row in rows:
-            index = self.model.createIndex(row,self.model.pdate_col)
-            self.model.setData(index,None,Qt.EditRole)
-            self.model.reCalc([row])    
+        if self.getSelRows():
+            rows = set(self.getSelRows())
+            for row in rows:
+                index = self.model.createIndex(row,self.model.pdate_col)
+                self.model.setData(index,None,Qt.EditRole)
+                self.model.reCalc([row])    
 
+    @pyqtSlot()
+    def setPDates(self,event):
+        if self.getSelRows():
+            pos = self.mapToGlobal(event.pos())
+            date_edit = dlg.DateEdit(pos.x(),pos.y(),self)
+            if date_edit.exec_():
+                date = date_edit.date.date().toPyDate().toordinal()
+                for row in self.getSelRows():
+                    self.model.setPDate(row,date)
+       
 class PayLevelModel(GenericTableModel):
     def __init__(
         self,db,r_model=None,sig_man=None,pay_man=None,parent=None        

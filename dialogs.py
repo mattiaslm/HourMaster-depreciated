@@ -15,7 +15,7 @@ from PyQt5.QtGui import *
 import datetime as dt
 
 
-version = '0.02.5'
+version = '0.1'
 
 class NewCompanyDialog(QWidget):
 
@@ -587,6 +587,34 @@ class AddRaiseDialog(QWidget):
     def colorChange(self,QColor):
         self.color_data = QColor.getRgb()           
 
+class DateEdit(QDialog):
+
+    def __init__(self,posx,posy,parent=None):
+        super().__init__(parent)
+        self.config(posx,posy)
+
+    def config(self,posx,posy):
+        self.setGeometry(posx,posy,200,100)
+        self.setFixedSize(200,100)
+        self.setWindowTitle('Select Date')
+        self.date = QDateEdit(QDate.currentDate())
+        self.conf = QPushButton('Ok')
+        self.conf.clicked.connect(self._conf)
+        self.cancel = QPushButton('Cancel')
+        self.cancel.clicked.connect(self._cancel)
 
 
+        layout = QGridLayout()
+        self.setLayout(layout)
+        layout.addWidget(self.date,0,0,1,0)
+        layout.addWidget(self.conf,1,0)
+        layout.addWidget(self.cancel,1,1)
+
+        self.show()
+
+    def _conf(self):
+        self.accept()
+
+    def _cancel(self):
+        self.close()   
 

@@ -185,7 +185,7 @@ def startUp():
         return arg_field 
 
 if __name__ == '__main__':
-    db_path = 'E:\Projects\Python\HourMaster\HM_A2-5\db\m_test.db'
+    db_path = 'E:\Projects\Python\HourMaster\HourMaster_Alpha\db\\time_test_10.db'
     app = QApplication(sys.argv)
     win = MainWindow(db_path)
     app.exec_()
