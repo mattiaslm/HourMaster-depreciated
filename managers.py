@@ -5,7 +5,7 @@ Written w/ PyQt5
 
 Mattias Lange McPherson
 
-December 21st, 2019
+December 30th, 2019
 
 """
 
@@ -16,7 +16,7 @@ import inspect
 import datetime as dt
 import timeit
 
-version = '0.02.5.1b'
+version = '0.1'
 
 #dbManager
 db_path = os.path.dirname(__file__)+'\db\\'
@@ -433,7 +433,7 @@ class sigManager(QObject):
 
     @tracked()
     def payChangedSig(self,rownum,typenum,s_offset,a_offset):
-        self.payChanged.emit(rownum,typenum,s_offset,a_offset)
+        self.payChanged.emit(rownum,typenum,round(s_offset,2),round(a_offset,2))
     
     @tracked()
     def hrsChangedSig(self,rownum,typenum,s_offset,a_offset):
