@@ -221,8 +221,7 @@ class GenericTableModel(QAbstractTableModel):
             self._last_index=max(self.db_index)
 
     def padDoubleR(self,flt,_len):
-        if type(flt) == int:
-            flt = float(flt)
+        flt = round(flt,-2)           
         flt_lst = str(flt).split('.')
         pad_num = _len - len(flt_lst[1])
         for i in range(pad_num):
@@ -1216,7 +1215,9 @@ class CallModel(GenericTableModel):
                 val = self.model_data[index.row()][index.column()]
                 if val == 0:
                     return '$ 0.00'
-                else:    
+                else:
+                    print(val)
+                    print(self.padDoubleR,2)    
                     return '$' + self.padDoubleR(val,2)
             elif index.column() in [5,7]:
                 val = self.model_data[index.row()][index.column()]

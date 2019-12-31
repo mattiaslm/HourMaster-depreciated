@@ -433,7 +433,7 @@ class sigManager(QObject):
 
     @tracked()
     def payChangedSig(self,rownum,typenum,s_offset,a_offset):
-        self.payChanged.emit(rownum,typenum,round(s_offset,2),round(a_offset,2))
+        self.payChanged.emit(rownum,typenum,s_offset,a_offset)
     
     @tracked()
     def hrsChangedSig(self,rownum,typenum,s_offset,a_offset):
@@ -842,16 +842,18 @@ class payRule():
         else:
             s_ot_hrs, s_dt_hrs, a_ot_hrs, a_dt_hrs = self.getOTHrs(call,del_call)
 
-            s_pay = max(min_pay,
+            s_pay = round(max(min_pay,
                 (call['sched']-s_ot_hrs-s_dt_hrs)*(call['rate']['rate']) +
                 s_ot_hrs*self.ot_mod*(call['rate']['rate'])+
-                s_dt_hrs*self.dt_mod*(call['rate']['rate'])
+                s_dt_hrs*self.dt_mod*(call['rate']['rate'])),
+                2
             )
 
-            a_pay = max(min_pay,
+            a_pay = round(max(min_pay,
                 (call['act']-a_ot_hrs-a_dt_hrs)*(call['rate']['rate']) +
                 a_ot_hrs*self.ot_mod*(call['rate']['rate'])+
-                a_dt_hrs*self.dt_mod*(call['rate']['rate'])
+                a_dt_hrs*self.dt_mod*(call['rate']['rate'])),
+                2
             ) 
 
         return s_pay, a_pay, self.reCalc(call['date'],o_date=o_date).remove(call['id']) 
