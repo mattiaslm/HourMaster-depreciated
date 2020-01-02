@@ -19,12 +19,13 @@ import components as comp
 import tools
 import timeit
 import random as rand
+import subprocess
 
 class MainWindow(QMainWindow):
     def __init__(self,db_path,size=(800,800),parent=None):
         super().__init__(parent)
         self.db_path = db_path
-        self.setWindowTitle('HourMaster V%s' %version)
+        self.setWindowTitle('HourMaster %s' %getVersion())
         self.size = size
         self.config()
         self.menuConfig()
@@ -183,6 +184,10 @@ def startUp():
         if '--new' in args or '-n' in args:
             arg_field[1] = 1
         return arg_field 
+
+def getVersion():
+    version = subprocess.check_output(['git','describe']).strip().decode()
+    return version.split('-')[0]
 
 if __name__ == '__main__':
     db_path = 'E:\Projects\Python\HourMaster\HourMaster_Alpha\db\\time_test_10.db'
