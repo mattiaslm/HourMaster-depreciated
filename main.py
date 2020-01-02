@@ -8,7 +8,7 @@ Mattias Lange McPherson
 December 21st, 2019
 """
 
-version = '0.02.5.1a'
+version = '0.01.1'
 
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *

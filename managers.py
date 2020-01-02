@@ -16,7 +16,7 @@ import inspect
 import datetime as dt
 import timeit
 
-version = '0.1'
+version = '0.1.01'
 
 #dbManager
 db_path = os.path.dirname(__file__)+'\db\\'
@@ -373,25 +373,22 @@ class sigTracker():
         if self._track:
             if self._open:
                 self._level += 1
-            self._cur_list.append((self._level,sig_name,typenum,rownum,caller))
+            self.printStack([self._level,sig_name,typenum,rownum,caller])
             self._open = True
 
     def close(self):
         if self._track:
             self._level -= 1
             if self._level <= 0:
-                self._stack.append(self._cur_list)
-                self.printStack(self._cur_list)
-                self._cur_list = []
+                self._level = 0
                 self._open = False
 
     def printStack(self,_list):
-        print('No. %i' %self._print_run)
+        if _list[0] == 0:
+            print('No. %i' %self._print_run)
         self._print_run += 1
-        for item in _list:
-            print('----'*item[0] + '%s CALLED BY %s (ROWNUM %d)' \
-                %(item[1],item[4],item[3]))                  
-        print('---------------------------')
+        print('----'*_list[0] + '%s CALLED BY %s (ROWNUM %d)' \
+            %(_list[1],_list[4],_list[3]))
     
     def track(self):
         self._track = True

@@ -19,7 +19,7 @@ import datetime as dt
 import copy
 
 
-version = '0.02.5.1b'
+version = '0.01.01'
 
 
 #Generic Classes
