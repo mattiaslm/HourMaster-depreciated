@@ -387,8 +387,8 @@ class sigTracker():
         if _list[0] == 0:
             print('No. %i' %self._print_run)
         self._print_run += 1
-        print('----'*_list[0] + '%s CALLED BY %s (ROWNUM %d)' \
-            %(_list[1],_list[4],_list[3]))
+        print('----'*_list[0] + '%s CALLED BY %s (ROWNUM %d, TYPENUM %d)' \
+            %(_list[1],_list[4],_list[3],_list[2]))
     
     def track(self):
         self._track = True
@@ -430,6 +430,7 @@ class sigManager(QObject):
 
     @tracked()
     def payChangedSig(self,rownum,typenum,s_offset,a_offset):
+        print(s_offset)
         self.payChanged.emit(rownum,typenum,s_offset,a_offset)
     
     @tracked()
@@ -543,7 +544,8 @@ class PayManager():
         job_calls = self.getCalls(rownum,typenum)
         s_off, a_off = self.updateCalls(job_calls)
 
-        self.sig.payChangedSig(rownum,typenum,s_off,a_off)
+        if typenum != 2:
+            self.sig.payChangedSig(rownum,typenum,s_off,a_off)
 
     def sumPay(self,rownum,typenum):
         if typenum == 0:
