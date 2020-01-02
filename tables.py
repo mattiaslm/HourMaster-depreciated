@@ -568,6 +568,8 @@ class GenericTableView(QTableView):
                 picker = QColorDialog(self)
                 picker.move(self.mapToGlobal(event.pos()))
                 picker.colorSelected.connect(self.colorChange)
+                if picker.exec_():
+                    picker.close()
                 picker.show() 
 
         #del_action

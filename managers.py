@@ -430,7 +430,6 @@ class sigManager(QObject):
 
     @tracked()
     def payChangedSig(self,rownum,typenum,s_offset,a_offset):
-        print(s_offset)
         self.payChanged.emit(rownum,typenum,s_offset,a_offset)
     
     @tracked()
