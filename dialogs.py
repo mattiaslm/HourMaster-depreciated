@@ -547,7 +547,7 @@ class AddRaiseDialog(QWidget):
         self.date_edit = QDateEdit()
         self.date_edit.setDate(QDate.currentDate())
         self.level_label = QLabel('Pay Level:')
-        self.level_edit = QDoubleSpinBox()       
+        self.level_edit = QDoubleSpinBox().setRange(0,10000)       
 
         self.g_box_layout.addWidget(self.date_label,0,0)
         self.g_box_layout.addWidget(self.date_edit,0,1)
