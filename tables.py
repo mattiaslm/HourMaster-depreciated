@@ -835,7 +835,7 @@ class GenericSortFilterProxy(QSortFilterProxyModel):
         left_val = self.sourceModel().data(left,Qt.EditRole)
         right_val = self.sourceModel().data(right,Qt.EditRole)
 
-        if left_val == None and right_val == None:
+        if left_val == None or right_val == None:
             return False
         else:    
             return left_val > right_val  
