@@ -130,12 +130,17 @@ class GenericTableModel(QAbstractTableModel):
 
         self.beginResetModel()
         
+        i = 1
         for row in rows:
             self.beginRemoveRows(QModelIndex(),row,row)
             del del_dict[row]
             self.endRemoveRows()
-            self.sig.itemDeletedSig(self.db_index[row],self.typeNum)
-            self.db.delete(self.db_name,self.db_index[row])            
+            self.db.delete(self.db_name,self.db_index[row]) 
+            if i != len(rows):
+                self.sig.itemDeletedSig(self.db_index[row],self.typeNum,last=False)
+            else:
+                self.sig.itemDeletedSig(self.db_index[row],self.typeNum,last=True)     
+            i += 1         
         self.mapFromDict(del_dict)
         self.endResetModel()
 
@@ -307,8 +312,8 @@ class GenericTableModel(QAbstractTableModel):
             self.ref_models[db_name] = model
 
     #Slots
-    @pyqtSlot(int,int)
-    def refDeleted(self,db_index,type_num):
+    @pyqtSlot(int,int,bool)
+    def refDeleted(self,db_index,type_num,last):
         if type_num == 0 and self.co_col:
             col = self.co_col
         elif type_num == 1 and self.r_col:

@@ -345,7 +345,7 @@ class tracked(object):
         pass
 
     def __call__(self,f):
-        def wrapper(*args):
+        def wrapper(*args,**kwargs):
             porthole = inspect.stack()[1]
             caller = inspect.stack()[1].function
             caller_class = str(type(inspect.stack()[1].frame.f_locals['self'])) \
@@ -354,7 +354,7 @@ class tracked(object):
             if args[0].trk._track:    
                 self.trk = args[0].trk
                 self.trk.open(args[2],args[1],f.__name__,caller_class + '.' + caller)
-            f(*args)
+            f(*args,**kwargs)
             if args[0].trk._track:
                 self.trk.close()
         return wrapper 
@@ -394,7 +394,7 @@ class sigTracker():
         self._track = True
 
 class sigManager(QObject):
-    itemDeleted = pyqtSignal(int,int)
+    itemDeleted = pyqtSignal(int,int,bool)
     itemChanged = pyqtSignal(int,int)
     itemColorChanged = pyqtSignal(int,int)
     payChanged = pyqtSignal(int,int,float,float)
@@ -417,8 +417,8 @@ class sigManager(QObject):
             ]
 
     @tracked()
-    def itemDeletedSig(self,rownum,typenum):
-        self.itemDeleted.emit(rownum,typenum)
+    def itemDeletedSig(self,rownum,typenum,last=True):
+        self.itemDeleted.emit(rownum,typenum,last)
 
     @tracked()
     def itemChangedSig(self,rownum,typenum):
@@ -479,6 +479,8 @@ class PayManager():
 
         self.timelines = {}
 
+        self.to_delete = []
+
         connect = {
             self.sig.hrsChanged:self.updatePay,
             self.sig.itemChanged:self.updatePay,
@@ -500,17 +502,28 @@ class PayManager():
                 for call_id in self.getCalls(rownum,typenum):
                     self.updateCall(call_id)          
 
-    def itemDeleted(self,rownum,typenum):
+    def itemDeleted(self,rownum,typenum,last=True):
         if typenum == 3:
-            call_data = self.getCallData(rownum)
-            calls = \
-                [c[0] for c in self.pr_W2.sameDateCo(call_data)] + \
-                self.pr_W2.getWkCalls(call_data)
-            for call in calls:
-                self.updateCall(call,rownum)
-            self.sig.payChangedSig(
-                rownum,typenum,-call_data['s_pay'],-call_data['a_pay']
-                )        
+#            call_data = self.getCallData(rownum)
+#            calls = \
+#                [c[0] for c in self.pr_W2.sameDateCo(call_data)] + \
+#                self.pr_W2.getWkCalls(call_data)
+#            for call in calls:
+#                self.updateCall(call,rownum)
+#            self.sig.payChangedSig(
+#                rownum,typenum,-call_data['s_pay'],-call_data['a_pay']
+#                )          
+            if not last:
+                self.to_delete.append(rownum)
+            elif last:
+                self.to_delete.append(rownum)
+                calls = self.getMultCallData(self.to_delete)
+                for call in calls:
+                    self.updateCall(call,del_call=call['id'])
+                    self.sig.payChangedSig(
+                        rownum,typenum,-call['s_pay'],-call['a_pay']
+                    )
+                    
 
         elif typenum == 1:
             if rownum in self.timelines.keys():
@@ -633,18 +646,18 @@ class PayManager():
                 )
 
         if carry:
-            self.updateCalls(recalc,carry=False)        
+            self.updateCalls(recalc,del_call=call['id'],carry=False)        
 
         return s_off, a_off
 
-    def updateCalls(self,call_ids,carry=True):
+    def updateCalls(self,call_ids,del_call=None,carry=True):
         if not call_ids:
             return 0, 0
         calls = self.getMultCallData(call_ids)
         s_off_tot = 0
         a_off_tot = 0
         for call in calls:
-            s_off, a_off = self.updateCall(call,carry=carry)
+            s_off, a_off = self.updateCall(call,del_call=del_call,carry=carry)
             s_off_tot += s_off
             a_off_tot += a_off
 
@@ -827,7 +840,10 @@ class payRule():
 
     def calculate(self,call,del_call=None,o_date=None):
         if call['id'] == del_call:
-            return [0,0]
+            recalc_calls = self.reCalc(call['date'],o_date=o_date)
+            if recalc_calls:
+                recalc_calls.remove(call['id'])
+            return 0, 0, recalc_calls
 
         min_pay = call['rate']['rate']*call['rate']['min']
 
@@ -854,7 +870,11 @@ class payRule():
                 2
             ) 
 
-        return s_pay, a_pay, self.reCalc(call['date'],o_date=o_date).remove(call['id']) 
+        recalc_calls = self.reCalc(call['date'],o_date=o_date)
+        if recalc_calls:
+            recalc_calls.remove(call['id'])
+
+        return s_pay, a_pay, recalc_calls 
 
     def jobCalc(self,call,del_call=None,o_date=None):
         s_hrs_tot, a_hrs_tot = self.parent.sumHrs(call['job'],2)
@@ -875,7 +895,11 @@ class payRule():
         else:    
             a_pay = round((call['act']/a_hrs_tot)*pay_tot,2)
 
-        return s_pay, a_pay, self.reCalc(call['date'],o_date=o_date).remove(call['id'])
+        recalc_calls = self.reCalc(call['date'],o_date=o_date)
+        if recalc_calls:
+            recalc_calls.remove(call['id'])
+
+        return s_pay, a_pay, recalc_calls 
 
     def getOTHrs(self,call,del_call=None):
         same_day_co = self.sameDateCo(call,del_call)
@@ -986,14 +1010,15 @@ class payRule():
         ]
 
         recalc_list = set()
+        if max(day_hrs) > self.ot or max(wk_hrs) > 40:
 
-        for call in self.db.single(self.db.getCol('ca','i',date=call_date)):
-            recalc_list.add(call)
-        for call in self.db.selectByRange('ca','i','date',call_date-wkday,call_date+(7-wkday)):
-            recalc_list.add(call)    
-
-        if o_date and o_date != call_date:
-            for call in self.reCalc(o_date):
+            for call in self.db.single(self.db.getCol('ca','i',date=call_date)):
                 recalc_list.add(call)
+            for call in self.db.selectByRange('ca','i','date',call_date-wkday,call_date+(7-wkday)):
+                recalc_list.add(call)    
 
-        return recalc_list                        
+            if o_date and o_date != call_date:
+                for call in self.reCalc(o_date):
+                    recalc_list.add(call)
+
+        return recalc_list                       
