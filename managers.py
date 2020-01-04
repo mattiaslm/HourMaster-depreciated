@@ -16,7 +16,6 @@ import inspect
 import datetime as dt
 import timeit
 
-version = '0.1.01'
 
 #dbManager
 db_path = os.path.dirname(__file__)+'\db\\'
@@ -503,16 +502,7 @@ class PayManager():
                     self.updateCall(call_id)          
 
     def itemDeleted(self,rownum,typenum,last=True):
-        if typenum == 3:
-#            call_data = self.getCallData(rownum)
-#            calls = \
-#                [c[0] for c in self.pr_W2.sameDateCo(call_data)] + \
-#                self.pr_W2.getWkCalls(call_data)
-#            for call in calls:
-#                self.updateCall(call,rownum)
-#            self.sig.payChangedSig(
-#                rownum,typenum,-call_data['s_pay'],-call_data['a_pay']
-#                )          
+        if typenum == 3:     
             if not last:
                 self.to_delete.append(rownum)
             elif last:

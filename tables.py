@@ -18,10 +18,6 @@ import dialogs as dlg
 import datetime as dt
 import copy
 
-
-version = '0.01.01'
-
-
 #Generic Classes
 
 class GenericTableModel(QAbstractTableModel):
@@ -1309,8 +1305,8 @@ class CallModel(GenericTableModel):
             if not self.model_data[row][self.pdate_col]:
                 return False
             index = self.index(self.db_index.index(rownum),self.pdate_col+1)
-            date = max(self.model_data[row][self.pdate_col] - self.model_data[row][self.date_col],0)
-            self.setData(index,date,Qt.EditRole)
+            days = max(self.model_data[row][self.pdate_col] - self.model_data[row][self.date_col],0)
+            self.setData(index,days,Qt.EditRole)
 
 class CallTable(GenericTableView):
     def __init__(self,model,parent=None):
